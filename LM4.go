@@ -1,57 +1,36 @@
-package Pair1_IST402
-
-import (
-	"bufio"
-	"fmt"
-	"os"
-)
-
 package main
 
 import (
-"bufio"
-"fmt"
-"os"
-
-"golang.org/x/crypto/chacha20"
+	"fmt"
+	"golang.org/x/crypto/chacha20"
+	"log"
 )
 
+// cipher_text = plain_text XOR chacha_stream(key, nonce)
+// plain_text = cipher_text XOR chacha_stream(key, nonce)
+
 func main() {
-	reader := bufio.NewReader(os.Stdin)
-
-	fmt.Print("Enter the string to encrypt: ")
-	plainText, _ := reader.ReadString('\n')
-
-	key := []byte("supersecretpassword") // Replace this with your actual secret key
-
-	// Encrypt the input string using ChaCha20
-	encrypted, nonce := encrypt([]byte(plainText), key)
-
-	// Decrypt the encrypted data back to the original form
-	decrypted := decrypt(encrypted, key, nonce)
-
-	fmt.Println("Encrypted:", string(encrypted))
-	fmt.Println("Decrypted:", string(decrypted))
-}
-
-func encrypt(plainText, key []byte) ([]byte, []byte) {
-	cipher, _ := chacha20.NewUnauthenticatedCipher(key, make([]byte, chacha20.NonceSize))
-	nonce := make([]byte, chacha20.NonceSize)
-
-	// Generate a random nonce for encryption
-	if _, err := cipher.XORKeyStream(nonce, nonce); err != nil {
-		panic(err)
+	//check "make"
+	key := make([]byte, 32)
+	nonce := make([]byte, 24)
+	plainText := []byte("Hello World")
+	cipher, err := chacha20.NewUnauthenticatedCipher(key, nonce)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	encrypted := make([]byte, len(plainText))
-	cipher.XORKeyStream(encrypted, plainText)
+	ciphertext := make([]byte, len(plainText))
+	cipher.XORKeyStream(ciphertext, plainText)
 
-	return encrypted, nonce
-}
+	fmt.Printf("Cipher text: %x\n", ciphertext)
 
-func decrypt(encrypted, key, nonce []byte) []byte {
-	cipher, _ := chacha20.NewUnauthenticatedCipher(key, nonce)
-	decrypted := make([]byte, len(encrypted))
-	cipher.XORKeyStream(decrypted, encrypted)
-	return decrypted
+	cipher, err = chacha20.NewUnauthenticatedCipher(key, nonce)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	decrypted := make([]byte, len(ciphertext))
+	cipher.XORKeyStream(decrypted, ciphertext)
+
+	fmt.Printf("Plaintext: %s\n", decrypted)
 }
